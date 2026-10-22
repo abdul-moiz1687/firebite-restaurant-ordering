@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
   <SiteFooter />
       <LocationModal />
 
-      <Toaster position="top-right" />
+      <Toaster position="bottom-center" />
     </CartProvider>
   </LocationProvider>
 </body>

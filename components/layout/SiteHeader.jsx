@@ -73,7 +73,7 @@ export default function SiteHeader() {
 
           <Link
             href="/menu"
-            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#df4428] px-3 py-3 text-sm font-bold text-white shadow-sm shadow-[#df4428]/15 transition duration-200 hover:-translate-y-0.5 hover:bg-[#bd321b] hover:shadow-md sm:px-5"
+            className="hidden sm:inline-flex items-center justify-center gap-1.5 rounded-full bg-[#df4428] px-3 py-3 text-sm font-bold text-white shadow-sm shadow-[#df4428]/15 transition duration-200 hover:-translate-y-0.5 hover:bg-[#bd321b] hover:shadow-md sm:px-5"
           >
             <span className="sm:hidden">Order</span>
             <span className="hidden sm:inline">Order Now</span>

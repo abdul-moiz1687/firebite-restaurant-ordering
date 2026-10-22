@@ -193,10 +193,6 @@ img {
     scroll-behavior: auto;
   }
 
-  .firebite-marquee__track {
-    animation: none !important;
-    transform: none !important;
-  }
 
   .firebite-final-cta a {
     transition: none !important;
