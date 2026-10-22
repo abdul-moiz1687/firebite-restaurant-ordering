@@ -202,3 +202,23 @@ img {
     transition: none !important;
   }
 }
+
+/* FIREBITE MOBILE HOTFIX */
+html, body { max-width: 100%; overflow-x: clip; }
+@media (hover: none), (pointer: coarse) {
+  .group\/card:hover { transform: none !important; translate: none !important; }
+  .group\/card:hover img { transform: none !important; scale: 1 !important; }
+  .group\/card:hover span { rotate: 0deg !important; }
+  .firebite-final-cta a:hover { transform: none !important; translate: none !important; }
+}
+@media (max-width: 640px) {
+  .firebite-marquee { padding-block: 2rem; }
+  .firebite-marquee__ribbon { width: calc(100% + 1rem); margin-inline: -0.5rem; }
+  .firebite-marquee__ribbon--solid { transform: rotate(-1.2deg) scale(1.01); }
+  .firebite-marquee__ribbon--outline { transform: rotate(1deg) scale(1.01); }
+  .firebite-marquee__group { gap: 1rem; padding: 1rem 0.75rem; }
+  .firebite-marquee__item { font-size: 1.05rem; }
+  .firebite-marquee__item svg { width: 16px; height: 16px; }
+  .firebite-marquee__track { animation-duration: 24s; }
+  .firebite-marquee__track--right { animation-duration: 28s; }
+}
