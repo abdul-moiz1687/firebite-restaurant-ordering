@@ -72,3 +72,133 @@ img {
     scroll-behavior: auto;
   }
 }
+
+/* Firebite's custom two-ribbon marquee. Keep overflow clipped to the section. */
+.firebite-marquee {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(2.25rem, 5vw, 4rem) 0;
+  background: #fffdf9;
+}
+
+.firebite-marquee__stage {
+  display: grid;
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
+  padding: 0.9rem 0;
+}
+
+.firebite-marquee__ribbon {
+  position: relative;
+  width: calc(100% + 4rem);
+  margin-inline: -2rem;
+  overflow: hidden;
+  border-block: 1px solid rgba(33, 27, 23, 0.12);
+}
+
+.firebite-marquee__ribbon--solid {
+  z-index: 1;
+  transform: rotate(-2.2deg) scale(1.015);
+  background: #df4428;
+  color: #fffdf9;
+  box-shadow: 0 14px 28px -24px rgba(33, 27, 23, 0.7);
+}
+
+.firebite-marquee__ribbon--outline {
+  transform: rotate(1.7deg) scale(1.015);
+  background: #fffdf9;
+  color: #211b17;
+}
+
+.firebite-marquee__track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation-duration: 30s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.firebite-marquee__track--left {
+  animation-name: firebite-marquee-left;
+}
+
+.firebite-marquee__track--right {
+  animation-name: firebite-marquee-right;
+  animation-duration: 36s;
+}
+
+.firebite-marquee__group {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(1.2rem, 3vw, 3rem);
+  padding: 1.15rem clamp(1rem, 2vw, 2rem);
+}
+
+.firebite-marquee__item {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: clamp(0.65rem, 1.5vw, 1.25rem);
+  white-space: nowrap;
+  font-size: clamp(1.05rem, 2.8vw, 2.35rem);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.firebite-marquee__item svg {
+  flex: 0 0 auto;
+}
+
+.firebite-marquee__ribbon--outline .firebite-marquee__item {
+  color: transparent;
+  -webkit-text-stroke: 1px #211b17;
+  text-stroke: 1px #211b17;
+}
+
+.firebite-marquee__ribbon--outline .firebite-marquee__item svg {
+  color: #df4428;
+  -webkit-text-stroke: 0;
+  stroke: currentColor;
+}
+
+@keyframes firebite-marquee-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes firebite-marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .firebite-marquee__ribbon:hover .firebite-marquee__track {
+    animation-play-state: paused;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .firebite-marquee__track {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .firebite-final-cta a {
+    transition: none !important;
+  }
+}
