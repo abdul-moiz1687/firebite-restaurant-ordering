@@ -222,3 +222,21 @@ html, body { max-width: 100%; overflow-x: clip; }
   .firebite-marquee__track { animation-duration: 24s; }
   .firebite-marquee__track--right { animation-duration: 28s; }
 }
+
+
+/* FIREBITE MOBILE NAV + TOUCH FEEDBACK */
+@media (max-width: 1023px) {
+ header button[aria-controls=mobile-navigation] { display:flex!important; flex:0 0 44px; width:44px; min-width:44px; height:44px; min-height:44px; color:#211b17!important; background:#fffdf9!important; border:2px solid #df4428!important; opacity:1!important; visibility:visible!important; box-shadow:0 3px 12px rgba(33,27,23,.10); }
+ #mobile-navigation { z-index:100!important; max-width:calc(100vw - 24px); }
+}
+@media (hover: none), (pointer: coarse) {
+ .group\/card:active { transform:scale(.985)!important; border-color:#df4428!important; box-shadow:0 12px 28px rgba(49,31,21,.16)!important; }
+ .group\/card:active img { transform:scale(1.04)!important; }
+ header button[aria-controls=mobile-navigation]:active { transform:scale(.94); }
+ .firebite-final-cta a:active { transform:scale(.98)!important; }
+}
+@media (max-width: 640px) {
+ .firebite-marquee__track { animation-duration:24s!important; animation-timing-function:linear!important; animation-iteration-count:infinite!important; }
+ .firebite-marquee__track--left { animation-name:firebite-marquee-left!important; }
+ .firebite-marquee__track--right { animation-name:firebite-marquee-right!important; animation-duration:28s!important; }
+}
