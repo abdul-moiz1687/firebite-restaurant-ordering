@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -17,10 +18,16 @@ export default function CartView() {
     isReady,
     updateQuantity,
     removeFromCart,
+    clearCart,
   } = useCart();
 
   const subtotal = items.reduce(
     (total, item) => total + item.price * item.quantity,
+    0
+  );
+
+  const totalItems = items.reduce(
+    (total, item) => total + item.quantity,
     0
   );
 
@@ -43,13 +50,31 @@ export default function CartView() {
           Continue shopping
         </Link>
 
-        <div className="mt-7">
-          <p className="text-xs font-bold tracking-[0.2em] text-[#df4428]">
-            YOUR ORDER
-          </p>
-          <h1 className="mt-2 text-3xl font-black sm:text-4xl">
-            Your cart
-          </h1>
+        <div className="mt-7 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold tracking-[0.2em] text-[#df4428]">
+              YOUR ORDER
+            </p>
+
+            <h1 className="mt-2 text-3xl font-black sm:text-4xl">
+              Your cart
+            </h1>
+          </div>
+
+          {items.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm("Remove all items from your cart?")) {
+                  clearCart();
+                }
+              }}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[#756a61] transition hover:text-red-600"
+            >
+              <Trash2 size={16} />
+              Clear cart
+            </button>
+          )}
         </div>
 
         {items.length === 0 ? (
@@ -110,10 +135,7 @@ export default function CartView() {
                           type="button"
                           aria-label={`Decrease ${item.name} quantity`}
                           onClick={() =>
-                            updateQuantity(
-                              item.id,
-                              item.quantity - 1
-                            )
+                            updateQuantity(item.id, item.quantity - 1)
                           }
                           className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[#fff0e9]"
                         >
@@ -128,10 +150,7 @@ export default function CartView() {
                           type="button"
                           aria-label={`Increase ${item.name} quantity`}
                           onClick={() =>
-                            updateQuantity(
-                              item.id,
-                              item.quantity + 1
-                            )
+                            updateQuantity(item.id, item.quantity + 1)
                           }
                           className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[#fff0e9]"
                         >
@@ -148,9 +167,14 @@ export default function CartView() {
                         Remove
                       </button>
                     </div>
+
+                    <p className="mt-3 text-sm font-bold text-[#241b17] sm:hidden">
+                      Total: Rs.{" "}
+                      {(item.price * item.quantity).toLocaleString("en-PK")}
+                    </p>
                   </div>
 
-                  <p className="hidden shrink-0 font-bold sm:block">
+                  <p className="hidden shrink-0 self-start pt-1 font-bold sm:block">
                     Rs.{" "}
                     {(item.price * item.quantity).toLocaleString("en-PK")}
                   </p>
@@ -163,12 +187,7 @@ export default function CartView() {
 
               <div className="mt-6 flex justify-between gap-4 text-sm">
                 <span className="text-[#756a61]">
-                  Subtotal (
-                  {items.reduce(
-                    (total, item) => total + item.quantity,
-                    0
-                  )}{" "}
-                  items)
+                  Subtotal ({totalItems} items)
                 </span>
 
                 <span className="font-bold">
@@ -178,6 +197,7 @@ export default function CartView() {
 
               <div className="mt-4 flex justify-between gap-4 border-t border-[#e9e0d7] pt-4 text-sm">
                 <span className="text-[#756a61]">Delivery fee</span>
+
                 <span className="text-right text-[#756a61]">
                   Calculated at checkout
                 </span>
@@ -185,6 +205,7 @@ export default function CartView() {
 
               <div className="mt-5 flex justify-between gap-4 border-t border-[#e9e0d7] pt-5">
                 <span className="font-bold">Subtotal</span>
+
                 <span className="text-lg font-black">
                   Rs. {subtotal.toLocaleString("en-PK")}
                 </span>
@@ -195,19 +216,19 @@ export default function CartView() {
                 confirmed at checkout.
               </p>
 
-            <Link
-  href="/checkout"
-  className="mt-5 flex w-full items-center justify-center rounded-full bg-[#df4428] px-5 py-4 font-bold text-white transition hover:bg-[#bd321b]"
->
-  Continue to checkout
-</Link>
+              <Link
+                href="/checkout"
+                className="mt-5 flex w-full items-center justify-center rounded-full bg-[#df4428] px-5 py-4 font-bold text-white transition hover:bg-[#bd321b]"
+              >
+                Continue to checkout
+              </Link>
 
-<Link
-  href="/menu"
-  className="mt-3 flex w-full items-center justify-center rounded-full border border-[#e9e0d7] px-5 py-3 text-sm font-bold transition hover:border-[#df4428] hover:text-[#df4428]"
->
-  Continue shopping
-</Link>
+              <Link
+                href="/menu"
+                className="mt-3 flex w-full items-center justify-center rounded-full border border-[#e9e0d7] px-5 py-3 text-sm font-bold transition hover:border-[#df4428] hover:text-[#df4428]"
+              >
+                Continue shopping
+              </Link>
             </aside>
           </div>
         )}

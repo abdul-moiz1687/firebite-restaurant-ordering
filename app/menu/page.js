@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { menuItems, categories } from "@/data/menu";
-import MenuGrid from "@/components/menu/MenuGrid";
+import MenuExplorer from "@/components/menu/MenuExplorer";
 
 export const metadata = {
   title: "Full Menu | Firebite",
@@ -26,7 +26,7 @@ export default function MenuPage() {
             THE FIREBITE MENU
           </p>
 
-          <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+          <h1 className="mt-3 text-4xl font-black tracking-tight text-[#241b17] sm:text-5xl">
             Find your next favourite.
           </h1>
 
@@ -36,44 +36,7 @@ export default function MenuPage() {
           </p>
         </div>
 
-        <nav
-          aria-label="Menu categories"
-          className="mt-8 flex flex-wrap gap-3"
-        >
-          {categories.map((category) => (
-            <a
-              key={category.id}
-              href={`#category-${category.id}`}
-              className="rounded-full border border-[#e9e0d7] px-4 py-2 text-sm font-semibold transition hover:border-[#df4428] hover:text-[#df4428]"
-            >
-              {category.name}
-            </a>
-          ))}
-        </nav>
-
-        <div className="mt-10 space-y-12">
-          {categories.map((category) => {
-            const items = menuItems.filter(
-              (item) => item.categoryId === category.id
-            );
-
-            if (items.length === 0) return null;
-
-            return (
-              <section
-                key={category.id}
-                id={`category-${category.id}`}
-                className="scroll-mt-28"
-              >
-                <h2 className="mb-6 text-2xl font-bold sm:text-3xl">
-                  {category.name}
-                </h2>
-
-                <MenuGrid items={items} />
-              </section>
-            );
-          })}
-        </div>
+        <MenuExplorer items={menuItems} categories={categories} />
       </div>
     </main>
   );
