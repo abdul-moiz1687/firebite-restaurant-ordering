@@ -174,6 +174,7 @@ function RevenueChart({ data }) {
   );
 }
 
+
 function StatusChart({ counts }) {
   const total = Object.values(counts).reduce(
     (sum, value) => sum + value,
@@ -183,7 +184,6 @@ function StatusChart({ counts }) {
   const radius = 65;
   const circumference = 2 * Math.PI * radius;
 
-  // Calculate each segment's offset without mutating a variable.
   const segments = statusConfig.map((status, index) => {
     const count = counts[status.id] || 0;
     const length = total > 0 ? (count / total) * circumference : 0;
@@ -210,7 +210,7 @@ function StatusChart({ counts }) {
   });
 
   return (
-    <div className="flex flex-col items-center gap-7 sm:flex-row">
+    <div className="flex min-w-0 flex-col items-center gap-7">
       <div className="relative size-48 shrink-0">
         <svg viewBox="0 0 160 160" className="size-full -rotate-90">
           <circle
@@ -261,23 +261,24 @@ function StatusChart({ counts }) {
         `}</style>
       </div>
 
-      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid w-full min-w-0 grid-cols-1 gap-3">
         {segments.map((status) => (
           <div
             key={status.id}
-            className="flex items-center justify-between gap-2"
+            className="flex min-w-0 items-center justify-between gap-3"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <span
-                className="size-2.5 rounded-full"
+                className="size-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: status.color }}
               />
-              <span className="text-xs font-medium text-[#756a61]">
+
+              <span className="min-w-0 break-words text-xs font-medium text-[#756a61]">
                 {status.label}
               </span>
             </div>
 
-            <span className="text-sm font-bold text-[#251f1b]">
+            <span className="shrink-0 text-sm font-bold text-[#251f1b]">
               {status.count}
             </span>
           </div>
@@ -286,6 +287,7 @@ function StatusChart({ counts }) {
     </div>
   );
 }
+
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -491,7 +493,7 @@ export default function AdminDashboard() {
                 <RevenueChart data={data.revenue || []} />
               </div>
 
-              <div className="rounded-2xl border border-[#eee7e0] bg-white p-5 shadow-sm sm:p-7">
+              <div className="min-w-0 rounded-2xl border border-[#eee7e0] bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-6">
                   <h2 className="text-lg font-black">Order status</h2>
 
