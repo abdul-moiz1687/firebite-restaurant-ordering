@@ -28,6 +28,12 @@
     "tailwindcss": "^4"
   },
   "overrides": {
-    "@grpc/grpc-js": "1.14.6"
+    "@grpc/grpc-js": "1.14.6",
+    "jwks-rsa": {
+      "jose": "4.15.9"
+    }
+  },
+  "jwks-rsa": {
+    "jose": "4.15.9"
   }
 }
