@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -58,7 +58,6 @@ const pickupSteps = deliverySteps.filter(
 
 export default function TrackOrderPage() {
   const params = useParams();
-  const router = useRouter();
 
   const orderId = Array.isArray(params.orderId)
     ? params.orderId[0]
@@ -68,7 +67,7 @@ export default function TrackOrderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
- const fetchOrder = useCallback(async () => {
+const fetchOrder = useCallback(async (silent = false) => {
   try {
     const response = await fetch(
       `/api/orders/${encodeURIComponent(orderId)}`,
@@ -84,22 +83,39 @@ export default function TrackOrderPage() {
     setOrder(result.order);
     setError("");
   } catch (err) {
-    setError(
-      err instanceof Error
-        ? err.message
-        : "Something went wrong."
-    );
-    setOrder(null);
+    // Background polling ki temporary failure par
+    // existing order screen ko hide nahi karna.
+    if (!silent) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong."
+      );
+      setOrder(null);
+    }
   } finally {
-    setLoading(false);
+    if (!silent) {
+      setLoading(false);
+    }
   }
 }, [orderId]);
 
-  useEffect(() => {
-  Promise.resolve().then(() => {
+ useEffect(() => {
+  if (!orderId) return;
+
+  const initialFetch = setTimeout(() => {
     fetchOrder();
-  });
-}, [fetchOrder]);
+  }, 0);
+
+  const pollingInterval = setInterval(() => {
+    fetchOrder(true);
+  }, 10000);
+
+  return () => {
+    clearTimeout(initialFetch);
+    clearInterval(pollingInterval);
+  };
+}, [fetchOrder, orderId]);
 
   const handleRefresh = () => {
   setLoading(true);
@@ -295,8 +311,7 @@ export default function TrackOrderPage() {
         </section>
 
         <p className="mt-6 text-center text-xs leading-5 text-[#756a61]">
-          Order status updates will appear here when the restaurant
-          updates your order.
+         Your order status is checked automatically for the latest updates.
         </p>
       </div>
     </main>

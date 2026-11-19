@@ -1,0 +1,813 @@
+===== CURRENT DASHBOARD PAGE ===== 
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Activity,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Flame,
+  LayoutDashboard,
+  LogOut,
+  RefreshCw,
+  ShoppingBag,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
+
+const STATUS_CONFIG = {
+  pending: { label: "Pending", color: "#F59E0B" },
+  confirmed: { label: "Confirmed", color: "#3B82F6" },
+  preparing: { label: "Preparing", color: "#8B5CF6" },
+  ready: { label: "Ready", color: "#06B6D4" },
+  out_for_delivery: { label: "Out for delivery", color: "#F97316" },
+  delivered: { label: "Delivered", color: "#16A34A" },
+  cancelled: { label: "Cancelled", color: "#EF4444" },
+};
+
+function formatCurrency(amount, currency = "PKR") {
+  return new Intl.NumberFormat("en-PK", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(Number(amount) || 0);
+}
+
+function formatCompactCurrency(amount) {
+  return `₨${new Intl.NumberFormat("en-PK", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(Number(amount) || 0)}`;
+}
+
+function RevenueChart({ data = [] }) {
+  const chartWidth = 720;
+  const left = 82;
+  const right = 24;
+  const top = 22;
+  const bottom = 202;
+  const plotWidth = chartWidth - left - right;
+  const plotHeight = bottom - top;
+  const values = data.map((item) => Number(item.amount) || 0);
+  const maximum = Math.max(...values, 1);
+
+  const points = data.map((item, index) => {
+    const x =
+      data.length <= 1
+        ? left + plotWidth / 2
+        : left + (index * plotWidth) / (data.length - 1);
+    const y = bottom - ((Number(item.amount) || 0) / maximum) * plotHeight;
+
+    return { x, y, ...item };
+  });
+
+  const linePath = points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+
+  const areaPath = points.length
+    ? `${linePath} L ${points[points.length - 1].x} ${bottom} L ${points[0].x} ${bottom} Z`
+    : "";
+
+  const hasRevenue = values.some((value) => value > 0);
+
+  return (
+    <div className="w-full">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-slate-800">
+            Delivered order value
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            Daily value of orders created in the last 7 days and marked Delivered
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700">
+          <CalendarDays size={14} />
+          Last 7 days
+        </span>
+      </div>
+
+      {data.length === 0 ? (
+        <div className="flex h-64 items-center justify-center text-sm text-slate-400">
+          Revenue data is not available yet.
+        </div>
+      ) : (
+        <div className="w-full overflow-hidden">
+          <svg
+            viewBox="0 0 720 250"
+            role="img"
+            aria-label="Delivered order value over the last seven days"
+            className="h-auto w-full overflow-visible"
+          >
+            <defs>
+              <linearGradient id="firebite-revenue-fill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#F97316" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="#F97316" stopOpacity="0.015" />
+              </linearGradient>
+            </defs>
+
+            {[0, 1, 2, 3].map((line) => {
+              const y = top + (plotHeight / 3) * line;
+              const value = maximum * ((3 - line) / 3);
+
+              return (
+                <g key={line}>
+                  <line
+                    x1={left}
+                    y1={y}
+                    x2={chartWidth - right}
+                    y2={y}
+                    stroke="#E8ECF2"
+                    strokeDasharray="4 6"
+                  />
+                  <text
+                    x={left - 12}
+                    y={y + 4}
+                    textAnchor="end"
+                    fill="#94A3B8"
+                    fontSize="11"
+                  >
+                    {formatCompactCurrency(value)}
+                  </text>
+                </g>
+              );
+            })}
+
+            {hasRevenue && (
+              <path d={areaPath} fill="url(#firebite-revenue-fill)" />
+            )}
+
+            {hasRevenue && (
+              <path
+                d={linePath}
+                fill="none"
+                stroke="#F97316"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+
+            {points.map((point) => (
+              <g key={point.date}>
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r="5"
+                  fill="#FFFFFF"
+                  stroke="#F97316"
+                  strokeWidth="3"
+                >
+                  <title>
+                    {`${point.date}: ${formatCurrency(point.amount)}`}
+                  </title>
+                </circle>
+                <text
+                  x={point.x}
+                  y="232"
+                  textAnchor="middle"
+                  fill="#64748B"
+                  fontSize="11"
+                  fontWeight="600"
+                >
+                  {point.label}
+                </text>
+              </g>
+            ))}
+
+            {!hasRevenue && (
+              <text
+                x={left + plotWidth / 2}
+                y={top + plotHeight / 2}
+                textAnchor="middle"
+                fill="#94A3B8"
+                fontSize="13"
+              >
+                No delivered sales recorded in this period
+              </text>
+            )}
+          </svg>
+        </div>
+      )}
+      <p className="mt-2 text-[11px] leading-5 text-slate-400">
+        This figure uses the subtotal of orders marked Delivered. Payment collection is not separately recorded in the current order data.
+      </p>
+    </div>
+  );
+}
+
+function OrderStatusChart({ items = [] }) {
+  const total = items.reduce((sum, item) => sum + (Number(item.count) || 0), 0);
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  const segments = items.map((item) => {
+    const count = Number(item.count) || 0;
+    const length = total > 0 ? (count / total) * circumference : 0;
+    const segment = {
+      ...item,
+      length,
+      offset,
+      color: STATUS_CONFIG[item.status]?.color || "#CBD5E1",
+      label: STATUS_CONFIG[item.status]?.label || item.status,
+    };
+    offset += length;
+    return segment;
+  });
+
+  return (
+    <div className="flex flex-col items-center gap-7 sm:flex-row sm:justify-around">
+      <div className="relative h-44 w-44 shrink-0">
+        <svg viewBox="0 0 160 160" role="img" aria-label="Order status distribution" className="h-full w-full">
+          <circle
+            cx="80"
+            cy="80"
+            r={radius}
+            fill="none"
+            stroke="#EEF1F5"
+            strokeWidth="15"
+          />
+          {segments.map((segment) =>
+            segment.length > 0 ? (
+              <circle
+                key={segment.status}
+                cx="80"
+                cy="80"
+                r={radius}
+                fill="none"
+                stroke={segment.color}
+                strokeWidth="15"
+                strokeDasharray={`${segment.length} ${circumference - segment.length}`}
+                strokeDashoffset={-segment.offset}
+                transform="rotate(-90 80 80)"
+                className="transition-all duration-700 ease-out"
+              >
+                <title>{`${segment.label}: ${segment.count}`}</title>
+              </circle>
+            ) : null
+          )}
+        </svg>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-black tracking-tight text-slate-900">
+            {total}
+          </span>
+          <span className="mt-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            Total orders
+          </span>
+        </div>
+      </div>
+
+      <div className="grid w-full grid-cols-1 gap-3 sm:max-w-[230px]">
+        {segments.map((segment) => (
+          <div key={segment.status} className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: segment.color }}
+              />
+              <span className="truncate text-xs font-medium text-slate-600">
+                {segment.label}
+              </span>
+            </div>
+            <span className="text-xs font-bold tabular-nums text-slate-900">
+              {segment.count}
+            </span>
+          </div>
+        ))}
+        {total === 0 && (
+          <p className="text-xs text-slate-400">
+            Status distribution will appear when orders arrive.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  const router = useRouter();
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const loadDashboard = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) setRefreshing(true);
+
+      try {
+        const response = await fetch("/api/admin/dashboard", {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        const result = await response.json();
+
+        if (response.status === 401) {
+          router.replace("/admin/login");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(result.error || "Unable to load dashboard data.");
+        }
+
+        setDashboard(result);
+        setError("");
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Something went wrong while loading dashboard."
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [router]
+  );
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadDashboard();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [loadDashboard]);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/admin/session", {
+        method: "DELETE",
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed.");
+      }
+
+      router.replace("/admin/login");
+      router.refresh();
+    } catch {
+      setError("Unable to log out. Please try again.");
+      setLoggingOut(false);
+    }
+  }
+
+  const statistics = dashboard?.statistics;
+  const statusBreakdown = dashboard?.statusBreakdown ?? [];
+  const revenueTrend = dashboard?.revenueTrend ?? [];
+
+  const cards = [
+    {
+      label: "Total orders",
+      value: statistics ? statistics.totalOrders.toLocaleString("en-PK") : "—",
+      icon: ShoppingBag,
+      iconClass: "bg-blue-50 text-blue-600",
+      accent: "border-l-blue-500",
+    },
+    {
+      label: "Today's orders",
+      value: statistics ? statistics.todayOrders.toLocaleString("en-PK") : "—",
+      icon: CalendarDays,
+      iconClass: "bg-violet-50 text-violet-600",
+      accent: "border-l-violet-500",
+    },
+    {
+      label: "Pending orders",
+      value: statistics ? statistics.pendingOrders.toLocaleString("en-PK") : "—",
+      icon: Clock3,
+      iconClass: "bg-amber-50 text-amber-600",
+      accent: "border-l-amber-500",
+    },
+    {
+      label: "Delivered orders",
+      value: statistics ? statistics.deliveredOrders.toLocaleString("en-PK") : "—",
+      icon: CheckCircle2,
+      iconClass: "bg-green-50 text-green-600",
+      accent: "border-l-green-500",
+    },
+    {
+      label: "Delivered value · all time",
+      value: statistics
+        ? formatCurrency(statistics.deliveredOrderValue)
+        : "—",
+      icon: Wallet,
+      iconClass: "bg-orange-50 text-orange-600",
+      accent: "border-l-orange-500",
+    },
+  ];
+
+  return (
+    <main className="min-h-screen bg-[#F5F6F8] text-slate-900 lg:flex">
+      <aside className="hidden w-64 shrink-0 flex-col bg-[#191B24] text-white lg:flex">
+        <div className="flex h-20 items-center gap-3 border-b border-white/10 px-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500 shadow-lg shadow-orange-950/30">
+            <Flame size={23} />
+          </div>
+          <div>
+            <h2 className="text-lg font-extrabold tracking-wide">FIREBITE</h2>
+            <p className="text-[10px] tracking-[0.2em] text-slate-400">ADMIN PANEL</p>
+          </div>
+        </div>
+
+        <div className="px-5 pt-8">
+          <p className="mb-4 px-3 text-[10px] font-bold tracking-[0.2em] text-slate-500">
+            WORKSPACE
+          </p>
+          <div className="flex items-center gap-3 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold shadow-lg shadow-orange-950/20">
+            <LayoutDashboard size={19} />
+            Dashboard
+          </div>
+        </div>
+
+        <div className="mt-auto p-5">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="mb-2 flex items-center gap-2 text-orange-400">
+              <Flame size={17} />
+              <span className="text-xs font-bold">FIREBITE</span>
+            </div>
+            <p className="text-xs leading-5 text-slate-400">
+              Restaurant operations overview.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="mt-5 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
+          >
+            <LogOut size={18} />
+            {loggingOut ? "Signing out..." : "Sign out"}
+          </button>
+        </div>
+      </aside>
+
+      <section className="min-w-0 flex-1">
+        <header className="flex min-h-20 items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 sm:px-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600 lg:hidden">
+              <Flame size={22} />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold tracking-[0.16em] text-slate-400">
+                FIREBITE MANAGEMENT
+              </p>
+              <h1 className="text-lg font-bold text-slate-900">Dashboard</h1>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => loadDashboard(true)}
+              disabled={refreshing || loading}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+              <span className="hidden sm:inline">
+                {refreshing ? "Refreshing..." : "Refresh data"}
+              </span>
+            </button>
+            <div className="hidden rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 sm:block">
+              ADMIN
+            </div>
+          </div>
+        </header>
+
+        <div className="mx-auto max-w-[1500px] space-y-7 p-5 sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-extrabold tracking-[0.18em] text-orange-600">
+                OVERVIEW
+              </p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                Restaurant performance
+              </h2>
+              <p className="mt-2 text-sm text-slate-500">
+                Live summary of orders and delivered sales from Firestore.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-500">
+              <Activity size={14} className="text-green-600" />
+              Data from your orders database
+            </div>
+          </div>
+
+          {error && (
+            <div
+              role="alert"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              <span>{error}</span>
+              <button
+                type="button"
+                onClick={() => loadDashboard(true)}
+                className="font-semibold underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          <section>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900">Key metrics</h3>
+              {loading && (
+                <span className="text-xs font-medium text-slate-400">Loading live data...</span>
+              )}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+              {cards.map(({ label, value, icon: Icon, iconClass, accent }) => (
+                <article
+                  key={label}
+                  className={`rounded-2xl border border-slate-200 border-l-4 ${accent} bg-white p-5 shadow-[0_3px_14px_rgba(15,23,42,0.035)] transition duration-200 hover:-translate-y-0.5 hover:shadow-md`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold text-slate-500">{label}</p>
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconClass}`}>
+                      <Icon size={19} />
+                    </div>
+                  </div>
+                  <p className="mt-5 text-2xl font-black tracking-tight text-slate-900">
+                    {loading && !dashboard ? "..." : value}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(330px,1fr)]">
+            <article className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_3px_14px_rgba(15,23,42,0.035)] sm:p-6">
+              <div className="mb-5 flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                  <TrendingUp size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900">Revenue trend · delivered order value</h3>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Delivered order value by order date
+                  </p>
+                </div>
+              </div>
+              {loading && !dashboard ? (
+                <div className="flex h-64 items-center justify-center text-sm text-slate-400">
+                  Loading revenue data...
+                </div>
+              ) : (
+                <RevenueChart data={revenueTrend} />
+              )}
+            </article>
+
+            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_3px_14px_rgba(15,23,42,0.035)] sm:p-6">
+              <div className="mb-6 flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                  <Activity size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900">Order status</h3>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Breakdown of all orders
+                  </p>
+                </div>
+              </div>
+              {loading && !dashboard ? (
+                <div className="flex h-44 items-center justify-center text-sm text-slate-400">
+                  Loading order statuses...
+                </div>
+              ) : (
+                <OrderStatusChart items={statusBreakdown} />
+              )}
+            </article>
+          </section>
+
+          <section className="grid gap-4 md:grid-cols-2">
+            <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <Clock3 size={19} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-800">Pending orders</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Orders waiting for restaurant confirmation: <strong className="text-slate-800">{statistics ? statistics.pendingOrders : "—"}</strong>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-600">
+                <CheckCircle2 size={19} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-800">Delivered orders</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Orders marked completed in Firestore: <strong className="text-slate-800">{statistics ? statistics.deliveredOrders : "—"}</strong>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <footer className="border-t border-slate-200 pt-5 text-center text-xs text-slate-400">
+            Firebite Restaurant Management · Dashboard overview
+          </footer>
+        </div>
+
+        <div className="border-t border-slate-200 bg-white p-4 lg:hidden">
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700 disabled:opacity-50"
+          >
+            <LogOut size={17} />
+            {loggingOut ? "Signing out..." : "Sign out"}
+          </button>
+        </div>
+      </section>
+    </main>
+  );
+}
+ 
+===== CURRENT DASHBOARD API ===== 
+import { connection } from "next/server";
+import { AggregateField, Timestamp } from "firebase-admin/firestore";
+import { adminDb } from "@/lib/firebase-admin";
+import { getAdminSession } from "@/lib/admin-auth";
+
+const ORDER_STATUSES = [
+  "pending",
+  "confirmed",
+  "preparing",
+  "ready",
+  "out_for_delivery",
+  "delivered",
+  "cancelled",
+];
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const PAKISTAN_OFFSET_MS = 5 * 60 * 60 * 1000;
+
+function getPakistanDateKey(date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Karachi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(
+    parts.map(({ type, value }) => [type, value])
+  );
+
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function getRevenueDays(now) {
+  const todayKey = getPakistanDateKey(now);
+  const [year, month, day] = todayKey.split("-").map(Number);
+  const pakistanMidnightUtc =
+    Date.UTC(year, month - 1, day) - PAKISTAN_OFFSET_MS;
+  const firstDayUtc = pakistanMidnightUtc - 6 * DAY_MS;
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(firstDayUtc + index * DAY_MS);
+
+    return {
+      date: getPakistanDateKey(date),
+      label: new Intl.DateTimeFormat("en-PK", {
+        timeZone: "Asia/Karachi",
+        weekday: "short",
+      }).format(date),
+      amount: 0,
+    };
+  });
+}
+
+export async function GET() {
+  // This endpoint uses request cookies, so it must run at request time.
+  await connection();
+
+  try {
+    const session = await getAdminSession();
+
+    if (!session) {
+      return Response.json(
+        { error: "Unauthorized access." },
+        {
+          status: 401,
+          headers: { "Cache-Control": "no-store, max-age=0" },
+        }
+      );
+    }
+
+    const ordersRef = adminDb.collection("orders");
+    const now = new Date();
+    const revenueDays = getRevenueDays(now);
+    const revenueByDate = new Map(
+      revenueDays.map((day) => [day.date, day])
+    );
+    const [firstYear, firstMonth, firstDay] = revenueDays[0].date
+      .split("-")
+      .map(Number);
+    const [todayYear, todayMonth, todayDay] = revenueDays[6].date
+      .split("-")
+      .map(Number);
+    const weekStart = new Date(
+      Date.UTC(firstYear, firstMonth - 1, firstDay) - PAKISTAN_OFFSET_MS
+    );
+    const todayStart = new Date(
+      Date.UTC(todayYear, todayMonth - 1, todayDay) - PAKISTAN_OFFSET_MS
+    );
+
+    const [
+      totalOrdersSnapshot,
+      todayOrdersSnapshot,
+      statusCountSnapshots,
+      deliveredValueSnapshot,
+      weekOrdersSnapshot,
+    ] = await Promise.all([
+      ordersRef.count().get(),
+      ordersRef
+        .where("createdAt", ">=", Timestamp.fromDate(todayStart))
+        .count()
+        .get(),
+      Promise.all(
+        ORDER_STATUSES.map((status) =>
+          ordersRef.where("status", "==", status).count().get()
+        )
+      ),
+      ordersRef
+        .where("status", "==", "delivered")
+        .aggregate({
+          deliveredValue: AggregateField.sum("subtotal"),
+        })
+        .get(),
+      ordersRef
+        .where("createdAt", ">=", Timestamp.fromDate(weekStart))
+        .get(),
+    ]);
+
+    const statusBreakdown = ORDER_STATUSES.map((status, index) => ({
+      status,
+      count: statusCountSnapshots[index].data().count,
+    }));
+
+    for (const document of weekOrdersSnapshot.docs) {
+      const order = document.data();
+
+      if (order.status !== "delivered") continue;
+
+      const createdAt = order.createdAt?.toDate?.();
+      const amount = Number(order.subtotal);
+
+      if (!(createdAt instanceof Date) || !Number.isFinite(amount)) {
+        continue;
+      }
+
+      const day = revenueByDate.get(getPakistanDateKey(createdAt));
+
+      if (day) {
+        day.amount += amount;
+      }
+    }
+
+    const countFor = (status) =>
+      statusBreakdown.find((item) => item.status === status)?.count ?? 0;
+
+    return Response.json(
+      {
+        statistics: {
+          totalOrders: totalOrdersSnapshot.data().count,
+          todayOrders: todayOrdersSnapshot.data().count,
+          pendingOrders: countFor("pending"),
+          deliveredOrders: countFor("delivered"),
+          deliveredOrderValue:
+            deliveredValueSnapshot.data().deliveredValue ?? 0,
+        },
+        statusBreakdown,
+        revenueTrend: revenueDays,
+      },
+      {
+        headers: { "Cache-Control": "no-store, max-age=0" },
+      }
+    );
+  } catch (error) {
+    console.error("Admin dashboard API error:", error);
+
+    return Response.json(
+      { error: "Unable to load dashboard data." },
+      {
+        status: 500,
+        headers: { "Cache-Control": "no-store, max-age=0" },
+      }
+    );
+  }
+}
