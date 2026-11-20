@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { LocationProvider } from "@/context/LocationContext";
 import LocationModal from "@/components/location/LocationModal";
@@ -6,6 +7,7 @@ import SiteHeader from "@/components/layout/SiteHeader";
 import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "sonner";
 import SiteFooter from "@/components/layout/SiteFooter";
+import FirebiteChat from "@/components/ai/FirebiteChat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +40,10 @@ export default function RootLayout({ children }) {
       {children}
   <SiteFooter />
       <LocationModal />
+
+      <Suspense fallback={null}>
+        <FirebiteChat />
+      </Suspense>
 
       <Toaster position="bottom-center" />
     </CartProvider>
